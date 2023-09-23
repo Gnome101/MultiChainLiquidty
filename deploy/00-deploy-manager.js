@@ -10,7 +10,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   //Deploying Diamond Init
   const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
   args = [500000];
-  const Lock = await deploy("Lock", {
+  const Lock = await deploy("PoolManager", {
     from: deployer,
     args: args,
     log: true,
@@ -22,4 +22,4 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     await verify(Lock.address, args);
   }
 };
-module.exports.tags = ["all", "Diamond"];
+module.exports.tags = ["all", "Pool"];

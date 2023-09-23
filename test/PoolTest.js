@@ -9,13 +9,11 @@ describe("Lock Test ", async function () {
     deployer = accounts[0];
     user = accounts[1];
     await deployments.fixture(["all"]);
-    Lock = await ethers.getContract("Lock");
+    poolManager = await ethers.getContract("PoolManager");
   });
-  it("can do stuff", async () => {
-    const num = await Lock.getNum();
-    console.log(num);
-    await Lock.setNum(3);
-    const num1 = await Lock.getNum();
-    console.log(num1);
+  it("can read min and max tick spacing", async () => {
+    const minSpacing = await poolManager.MIN_TICK_SPACING();
+    const maxSpacing = await poolManager.MAX_TICK_SPACING();
+    console.log(minSpacing.toString(), maxSpacing.toString());
   });
 });
