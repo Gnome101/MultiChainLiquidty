@@ -15,7 +15,7 @@ describe("Pool Test ", async function () {
   });
   it("can initialze my own pool", async () => {
     //I need key, sqrtPrice, and hookData
-    const hook = "0x0000000000000000000000000000";
+    const hook = "0x0000000000000000000000000000000000000000";
     //console.log(EPICDAI);
     console.log(deployer.address);
     const adresses = [EPICDAI.target, HOG.target];
@@ -28,10 +28,27 @@ describe("Pool Test ", async function () {
       tickSpacing: "60",
       hooks: hook,
     };
-    const sqrtPrice = calculateSqrtPriceX96(10, 18, 18);
-    console.log(sqrtPrice);
+    const sqrtPrice = calculateSqrtPriceX96(1, 18, 18);
+    //console.log(sqrtPrice);
     const hookData = hook;
+    await poolManager.initialize(poolKey, sqrtPrice.toFixed(), "0x");
+    //Modify positon params
+    const lowerBound = 0 - 60 * 10;
+    const upperBound = 0 + 60 * 10;
+    await HOG.mint();
+    await EPICDAI.mint();
 
-    await poolManager.initialize(poolKey, sqrtPrice, hookData);
+    const ModifyPositionParams = {
+      tickLower: lowerBound,
+      tickUpper: upperBound,
+      liquidityDelta: "10000000",
+    };
+    await H;
+    const res = await poolManager.callStatic.modifyPosition(
+      poolKey,
+      ModifyPositionParams,
+      "0x"
+    );
+    console.log(res);
   });
 });
