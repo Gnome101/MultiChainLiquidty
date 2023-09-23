@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 const { assert } = require("chai");
 const bigDecimal = require("js-big-decimal");
-
+const { calculateSqrtPriceX96 } = require("../utils/tokenTools");
 describe("Pool Test ", async function () {
   let poolManager;
   beforeEach(async () => {
@@ -15,17 +15,23 @@ describe("Pool Test ", async function () {
   });
   it("can initialze my own pool", async () => {
     //I need key, sqrtPrice, and hookData
-    const hook = 0x0000000000000000000000000000;
-    const adresses = [EPICDAI.address, HOG.address];
+    const hook = "0x0000000000000000000000000000";
+    //console.log(EPICDAI);
+    console.log(deployer.address);
+    const adresses = [EPICDAI.target, HOG.target];
     adresses.sort();
+    console.log(adresses);
     const poolKey = {
-      currency0: adresses[0],
-      currency1: adresses[1],
-      fee: 3000,
-      tickSpacing: 60,
-      hooks: 0x0000000000000000000000000000,
+      currency0: adresses[0].toString().trim(),
+      currency1: adresses[1].toString().trim(),
+      fee: "3000",
+      tickSpacing: "60",
+      hooks: hook,
     };
+    const sqrtPrice = calculateSqrtPriceX96(10, 18, 18);
+    console.log(sqrtPrice);
+    const hookData = hook;
 
-    await poolManager.initialize();
+    await poolManager.initialize(poolKey, sqrtPrice, hookData);
   });
 });
