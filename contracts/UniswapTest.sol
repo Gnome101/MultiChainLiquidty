@@ -25,17 +25,16 @@ contract UniSwapTest {
 
     function addLiquidity(
         PoolKey calldata poolKey,
-        IPoolManager.SwapParams calldata modifyLiquidtyParams,
+        IPoolManager.ModifyPositionParams calldata modifyLiquidtyParams,
         uint256 deadline
     ) public payable {
         poolManager.lock(abi.encode(poolKey, modifyLiquidtyParams, deadline));
     }
 
-    function lockAcquired(
-        uint256,
-        bytes calldata data
-    ) external returns (bytes memory) {
-        if (msg.sender == address(poolManager)) {
+    function lockAcquired(bytes calldata data) external returns (bytes memory) {
+        console.log("Hello!!");
+        console.log(msg.sender, address(poolManager));
+        if (msg.sender != address(poolManager)) {
             revert OnlyPoolManager();
         }
 
@@ -49,7 +48,7 @@ contract UniSwapTest {
             );
 
         if (block.timestamp > deadline) {
-            revert SwapExpired();
+            revert();
         }
 
         BalanceDelta delta = poolManager.modifyPosition(
@@ -70,8 +69,9 @@ contract UniSwapTest {
     ) private {
         console.log("lock");
         console.log(msg.sender);
-
+        console.log(uint128(deltaAmount));
         if (deltaAmount < 0) {
+            console.log("Amount:", uint128(-deltaAmount));
             poolManager.take(currency, msg.sender, uint128(-deltaAmount));
             return;
         }
@@ -80,8 +80,7 @@ contract UniSwapTest {
             poolManager.settle{value: uint128(deltaAmount)}(currency);
             return;
         }
-        IERC20(Currency.unwrap(currency)).safeTransferFrom(
-            msg.sender,
+        IERC20(Currency.unwrap(currency)).safeTransfer(
             address(poolManager),
             uint128(deltaAmount)
         );

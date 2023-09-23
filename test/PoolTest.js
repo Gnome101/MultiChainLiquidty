@@ -62,14 +62,14 @@ describe("Pool Test ", async function () {
 
     // await HOG.approve(router.target, brick.toString());
     // await EPICDAI.approve(router.target, brick.toString());
-    // await HOG.transfer(caller.target, "10000000000000000000000");
-    // await EPICDAI.transfer(caller.target, "10000000000000000000000");
+    await HOG.transfer(uniswapTest.target, "10000000000000000000000");
+    await EPICDAI.transfer(uniswapTest.target, "10000000000000000000000");
     const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
     const amount = "1000000000000000000";
     await uniswapTest.addLiquidity(
       poolKey,
       ModifyPositionParams,
-      timestamp + 100000000
+      timeStamp + 100000000
     );
   });
 });
