@@ -29,6 +29,7 @@ const ETHERSCAN_API_KEY =
   process.env.ETHERSCAN_API_KEY || "Your etherscan API key";
 const ARBSCAN_API_KEY = process.env.ARBSCAN_API_KEY;
 const GNOSIS_API_KEY = process.env.GNOSIS_API_KEY;
+const SCROLL_API_KEY = process.env.SCROLL_API_KEY;
 
 const ARBGOERLI_RPC_URL = process.env.ARBGOERLI_RPC_URL;
 
@@ -88,6 +89,7 @@ module.exports = {
       mainnet: ETHERSCAN_API_KEY,
       arbitrumGoerli: ARBSCAN_API_KEY,
       gnosis: GNOSIS_API_KEY,
+      scrollSepolia: SCROLL_API_KEY,
       mantle: "abc",
     },
     customChains: [

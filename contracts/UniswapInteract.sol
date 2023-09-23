@@ -17,7 +17,7 @@ error OnlyPoolManager();
 using SafeERC20 for IERC20;
 import "hardhat/console.sol";
 
-contract UniSwapTest {
+contract UniswapInteract {
     using CurrencyLibrary for Currency;
     IPoolManager public poolManager;
     mapping(uint256 => uint256) actionChoice;

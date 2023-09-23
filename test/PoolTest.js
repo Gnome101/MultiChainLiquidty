@@ -10,7 +10,7 @@ describe("Pool Test ", async function () {
   let EPICDAI;
   let router;
   let caller;
-  let uniswapTest;
+  let uniswapInteract;
   let hookFactory;
   beforeEach(async () => {
     accounts = await ethers.getSigners(); // could also do with getNamedAccounts
@@ -23,7 +23,7 @@ describe("Pool Test ", async function () {
     // router = await ethers.getContract("UniswapV4Router");
     // routeFacet = await ethers.getContract("RouterFacet");
     // caller = await ethers.getContract("UniswapV4Caller");
-    uniswapTest = await ethers.getContract("UniSwapTest");
+    uniswapInteract = await ethers.getContract("UniswapInteract");
     hookFactory = await ethers.getContract("UniswapHooksFactory");
   });
   it("can initialze my own pool", async () => {
@@ -65,17 +65,17 @@ describe("Pool Test ", async function () {
 
     // await HOG.approve(router.target, brick.toString());
     // await EPICDAI.approve(router.target, brick.toString());
-    await HOG.transfer(uniswapTest.target, "10000000000000000000000");
-    await EPICDAI.transfer(uniswapTest.target, "10000000000000000000000");
+    await HOG.transfer(uniswapInteract.target, "10000000000000000000000");
+    await EPICDAI.transfer(uniswapInteract.target, "10000000000000000000000");
     let timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
     const amount = "1000000000000000000";
-    // console.log(uniswapTest);
-    await uniswapTest.addLiquidity(
+    // console.log(uniswapInteract);
+    await uniswapInteract.addLiquidity(
       poolKey,
       ModifyPositionParams,
       timeStamp + 100000000
     );
-    const poolID = await uniswapTest.getID(poolKey);
+    const poolID = await uniswapInteract.getID(poolKey);
     let liq = await poolManager.getLiquidity(poolID);
     // console.log(liq.toString());
     //Add in liquidity finder
@@ -86,7 +86,7 @@ describe("Pool Test ", async function () {
     const token0Amount = new Decimal("1000").times(decimalAdj);
     const token1Amount = new Decimal("1000").times(decimalAdj);
 
-    const liquidity = await uniswapTest.getLiquidityAmount(
+    const liquidity = await uniswapInteract.getLiquidityAmount(
       slot0[1].toString(),
       lowerBound,
       upperBound,
@@ -95,10 +95,10 @@ describe("Pool Test ", async function () {
     );
     // console.log("Liquidity:", liquidity.toString());
     ModifyPositionParams.liquidityDelta = liquidity.toString();
-    await HOG.transfer(uniswapTest.target, token0Amount.toFixed());
-    await EPICDAI.transfer(uniswapTest.target, token1Amount.toFixed());
+    await HOG.transfer(uniswapInteract.target, token0Amount.toFixed());
+    await EPICDAI.transfer(uniswapInteract.target, token1Amount.toFixed());
     timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
-    await uniswapTest.addLiquidity(
+    await uniswapInteract.addLiquidity(
       poolKey,
       ModifyPositionParams,
       timeStamp + 100000000
@@ -114,7 +114,7 @@ describe("Pool Test ", async function () {
     };
     //zeroForOne - true - 4295128740
     //zeroForOne - false - 1461446703485210103287273052203988822378723970342
-    await uniswapTest.swap(poolKey, SwapParams, timeStamp + 100000000);
+    await uniswapInteract.swap(poolKey, SwapParams, timeStamp + 100000000);
     //Next is swapper
   });
   it("can initialze my own pool 21", async () => {
@@ -132,7 +132,7 @@ describe("Pool Test ", async function () {
     const poolKey = {
       currency0: adresses[0].toString().trim(),
       currency1: adresses[1].toString().trim(),
-      fee: "3000",
+      fee: "100000",
       tickSpacing: "60",
       hooks: hook,
     };
@@ -160,16 +160,16 @@ describe("Pool Test ", async function () {
 
     // await HOG.approve(router.target, brick.toString());
     // await EPICDAI.approve(router.target, brick.toString());
-    await HOG.transfer(uniswapTest.target, "10000000000000000000000");
-    await EPICDAI.transfer(uniswapTest.target, "10000000000000000000000");
+    await HOG.transfer(uniswapInteract.target, "10000000000000000000000");
+    await EPICDAI.transfer(uniswapInteract.target, "10000000000000000000000");
     let timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
     const amount = "1000000000000000000";
-    // await uniswapTest.addLiquidity(
+    // await uniswapInteract.addLiquidity(
     //   poolKey,
     //   ModifyPositionParams,
     //   timeStamp + 100000000
     // );
-    const poolID = await uniswapTest.getID(poolKey);
+    const poolID = await uniswapInteract.getID(poolKey);
 
     //Add in liquidity finder
     const slot0 = await poolManager.getSlot0(poolID);
@@ -179,7 +179,7 @@ describe("Pool Test ", async function () {
     const token0Amount = new Decimal("1000").times(decimalAdj);
     const token1Amount = new Decimal("1000").times(decimalAdj);
 
-    const liquidity = await uniswapTest.getLiquidityAmount(
+    const liquidity = await uniswapInteract.getLiquidityAmount(
       slot0[1].toString(),
       lowerBound,
       upperBound,
@@ -188,10 +188,10 @@ describe("Pool Test ", async function () {
     );
     // console.log("Liquidity:", liquidity.toString());
     ModifyPositionParams.liquidityDelta = liquidity.toString();
-    await HOG.transfer(uniswapTest.target, token0Amount.toFixed());
-    await EPICDAI.transfer(uniswapTest.target, token1Amount.toFixed());
+    await HOG.transfer(uniswapInteract.target, token0Amount.toFixed());
+    await EPICDAI.transfer(uniswapInteract.target, token1Amount.toFixed());
     timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
-    await uniswapTest.addLiquidity(
+    await uniswapInteract.addLiquidity(
       poolKey,
       ModifyPositionParams,
       timeStamp + 100000000
@@ -210,10 +210,10 @@ describe("Pool Test ", async function () {
     //zeroForOne - true - 4295128740
     //zeroForOne - false - 1461446703485210103287273052203988822378723970342
 
-    await uniswapTest.swap(poolKey, SwapParams, timeStamp + 100000000);
+    await uniswapInteract.swap(poolKey, SwapParams, timeStamp + 100000000);
     liq = await poolManager.getPosition(
       poolID,
-      uniswapTest.target,
+      uniswapInteract.target,
       lowerBound,
       upperBound
     );
@@ -224,26 +224,26 @@ describe("Pool Test ", async function () {
     timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
     liq = await poolManager.getPosition(
       poolID,
-      uniswapTest.target,
+      uniswapInteract.target,
       lowerBound,
       upperBound
     );
     console.log(liq.toString());
-    const daiBalBefore = await EPICDAI.balanceOf(uniswapTest.target);
-    const hogBalBefore = await HOG.balanceOf(uniswapTest.target);
-    await uniswapTest.donate(
+    const daiBalBefore = await EPICDAI.balanceOf(uniswapInteract.target);
+    const hogBalBefore = await HOG.balanceOf(uniswapInteract.target);
+    await uniswapInteract.donate(
       poolKey,
       "1000000000000000000",
       "1000000000000000000",
       timeStamp + 100000
     );
-    const daiBalAfter = await EPICDAI.balanceOf(uniswapTest.target);
-    const hogBalfFter = await HOG.balanceOf(uniswapTest.target);
+    const daiBalAfter = await EPICDAI.balanceOf(uniswapInteract.target);
+    const hogBalfFter = await HOG.balanceOf(uniswapInteract.target);
     console.log(hogBalBefore.toString(), hogBalfFter.toString());
     console.log(daiBalBefore.toString(), daiBalAfter.toString());
     liq = await poolManager.getPosition(
       poolID,
-      uniswapTest.target,
+      uniswapInteract.target,
       lowerBound,
       upperBound
     );

@@ -18,7 +18,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   });
 
   args = [PoolManager.address];
-  const Router = await deploy("UniSwapTest", {
+  const Router = await deploy("UniswapInteract", {
     from: deployer,
     args: args,
     log: true,
