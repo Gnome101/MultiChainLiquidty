@@ -1,5 +1,5 @@
 Arguments: 
-  /home/thegnome/.nvm/versions/node/v18.8.0/bin/node /home/thegnome/.cache/node/corepack/yarn/1.22.19/bin/yarn.js add @uniswap/v4-core
+  /home/thegnome/.nvm/versions/node/v18.8.0/bin/node /home/thegnome/.cache/node/corepack/yarn/1.22.19/bin/yarn.js add @uniswap/v4-periphery
 
 PATH: 
   /home/thegnome/.vscode-server/bin/abd2f3db4bdb28f9e95536dfa84d8479f1eb312d/bin/remote-cli:/home/thegnome/.nvm/versions/node/v18.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA NvDLISR:/mnt/c/Users/Administrator/AppData/Local/Microsoft/WindowsApps:/mnt/c/Program Files/HP/OMEN-Broadcast/Common:/mnt/c/Program Files/nodejs/:/mnt/c/Users/alexf/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/alexf/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/alexf/AppData/Roaming/npm:/snap/bin
@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@uniswap%2fv4-core: Not found
+  Error: https://registry.yarnpkg.com/@uniswap%2fv4-periphery: Not found
       at params.callback [as _callback] (/home/thegnome/.cache/node/corepack/yarn/1.22.19/lib/cli.js:66145:18)
       at self.callback (/home/thegnome/.cache/node/corepack/yarn/1.22.19/lib/cli.js:140890:22)
       at Request.emit (node:events:513:28)
@@ -53,8 +53,10 @@ npm manifest:
       "@uniswap/v2-periphery": "^1.1.0-beta.0",
       "@uniswap/v3-core": "^1.0.1",
       "@uniswap/v3-periphery": "^1.4.3",
+      "@uniswap/v4-core": "https://github.com/Uniswap/v4-core.git",
       "hardhat-change-network": "^0.0.7",
-      "js-big-decimal": "^1.4.1"
+      "js-big-decimal": "^1.4.1",
+      "v4-periphery": "https://github.com/Uniswap/v4-periphery.git"
     }
   }
 
@@ -1003,6 +1005,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.4.2-solc-0.7.tgz#38f4dbab672631034076ccdf2f3201fab1726635"
     integrity sha512-W6QmqgkADuFcTLzHL8vVoNBtkwjvQRpYIAom7KiUNoLKghyx3FgH0GBjt8NRvigV1ZmMOBllvE1By1C+bi8WpA==
   
+  "@openzeppelin/contracts@4.4.2":
+    version "4.4.2"
+    resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.4.2.tgz#4e889c9c66e736f7de189a53f8ba5b8d789425c2"
+    integrity sha512-NyJV7sJgoGYqbtNUWgzzOGW4T6rR19FmX1IJgXGdapGPWsuMelGJn9h03nos0iqfforCbCB0iYIR0MtIuIFLLw==
+  
   "@openzeppelin/contracts@^4.9.2":
     version "4.9.3"
     resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
@@ -1378,6 +1385,12 @@ Lockfile:
       "@uniswap/v2-core" "1.0.1"
       "@uniswap/v3-core" "1.0.0"
       base64-sol "1.0.1"
+  
+  "@uniswap/v4-core@https://github.com/Uniswap/v4-core.git":
+    version "1.0.0"
+    resolved "https://github.com/Uniswap/v4-core.git#bc94eb0f2074e366ea3386adb1a7b9978c8d1070"
+    dependencies:
+      "@openzeppelin/contracts" "4.4.2"
   
   abbrev@1:
     version "1.1.1"
@@ -5869,6 +5882,10 @@ Lockfile:
     version "8.3.2"
     resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
     integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
+  
+  "v4-periphery@https://github.com/Uniswap/v4-periphery.git":
+    version "0.0.0"
+    resolved "https://github.com/Uniswap/v4-periphery.git#2fe5608cfee99062ee2502245fedd96714dbc11c"
   
   verror@1.10.0:
     version "1.10.0"

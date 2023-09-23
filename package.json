@@ -25,7 +25,10 @@
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.3",
     "@uniswap/v4-core": "https://github.com/Uniswap/v4-core.git",
+    "big-decimal": "^1.0.2",
+    "decimal.js": "^10.4.3",
     "hardhat-change-network": "^0.0.7",
-    "js-big-decimal": "^1.4.1"
+    "js-big-decimal": "^1.4.1",
+    "v4-periphery": "https://github.com/Uniswap/v4-periphery"
   }
 }
