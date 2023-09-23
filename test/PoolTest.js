@@ -121,6 +121,8 @@ describe("Pool Test ", async function () {
     //I need key, sqrtPrice, and hookData
 
     const hook = await hookFactory.hooks(0);
+    const testHook = await ethers.getContractAt("TestHook", hook);
+
     // console.log(hook);
     //console.log(EPICDAI);
     // console.log(deployer.address);
@@ -162,14 +164,13 @@ describe("Pool Test ", async function () {
     await EPICDAI.transfer(uniswapTest.target, "10000000000000000000000");
     let timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
     const amount = "1000000000000000000";
-    await uniswapTest.addLiquidity(
-      poolKey,
-      ModifyPositionParams,
-      timeStamp + 100000000
-    );
+    // await uniswapTest.addLiquidity(
+    //   poolKey,
+    //   ModifyPositionParams,
+    //   timeStamp + 100000000
+    // );
     const poolID = await uniswapTest.getID(poolKey);
-    let liq = await poolManager.getLiquidity(poolID);
-    // console.log(liq.toString());
+
     //Add in liquidity finder
     const slot0 = await poolManager.getSlot0(poolID);
     //sqrtPrice,tick, protocalFees, hookFees
@@ -195,7 +196,7 @@ describe("Pool Test ", async function () {
       ModifyPositionParams,
       timeStamp + 100000000
     );
-    liq = await poolManager.getLiquidity(poolID);
+    let liq = await poolManager.getLiquidity(poolID);
     // console.log(liq.toString());
     const swapAmount = new Decimal("90").times(decimalAdj);
 
@@ -204,16 +205,52 @@ describe("Pool Test ", async function () {
       amountSpecified: swapAmount.toFixed(),
       sqrtPriceLimitX96: "4295128740",
     };
+    console.log((await testHook.counter()).toString());
+
     //zeroForOne - true - 4295128740
     //zeroForOne - false - 1461446703485210103287273052203988822378723970342
+
     await uniswapTest.swap(poolKey, SwapParams, timeStamp + 100000000);
-    const daiBalBefore = await EPICDAI.balanceOf(deployer.address);
-    const daiBalBefore = await EPICDAI.balanceOf(deployer.address);
+    liq = await poolManager.getPosition(
+      poolID,
+      uniswapTest.target,
+      lowerBound,
+      upperBound
+    );
+    console.log(liq.toString());
 
     console.log((await testHook.counter()).toString());
 
-    const testHook = await ethers.getContractAt("TestHook", hook);
-    console.log((await testHook.counter()).toString());
+    timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
+    liq = await poolManager.getPosition(
+      poolID,
+      uniswapTest.target,
+      lowerBound,
+      upperBound
+    );
+    console.log(liq.toString());
+    const daiBalBefore = await EPICDAI.balanceOf(uniswapTest.target);
+    const hogBalBefore = await HOG.balanceOf(uniswapTest.target);
+    await uniswapTest.donate(
+      poolKey,
+      "1000000000000000000",
+      "1000000000000000000",
+      timeStamp + 100000
+    );
+    const daiBalAfter = await EPICDAI.balanceOf(uniswapTest.target);
+    const hogBalfFter = await HOG.balanceOf(uniswapTest.target);
+    console.log(hogBalBefore.toString(), hogBalfFter.toString());
+    console.log(daiBalBefore.toString(), daiBalAfter.toString());
+    liq = await poolManager.getPosition(
+      poolID,
+      uniswapTest.target,
+      lowerBound,
+      upperBound
+    );
+    const slot01 = await poolManager.getSlot0(poolID);
+    console.log(slot01.toString());
+    console.log(liq.toString());
+    console.log("Donated!");
     //Next is sw
   });
 });

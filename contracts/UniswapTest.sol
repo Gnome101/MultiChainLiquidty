@@ -23,8 +23,11 @@ contract UniSwapTest {
     mapping(uint256 => uint256) actionChoice;
     mapping(uint256 => IPoolManager.ModifyPositionParams) modificaitons;
     mapping(uint256 => IPoolManager.SwapParams) swaps;
+    mapping(uint256 => uint256[2]) donations;
+
     uint256 modCounter;
     uint256 modSwap;
+    uint256 doCount;
 
     constructor(IPoolManager _poolManager) {
         poolManager = _poolManager;
@@ -42,6 +45,20 @@ contract UniSwapTest {
         modificaitons[modCounter] = modifyLiquidtyParams;
         bytes memory res = poolManager.lock(
             abi.encode(poolKey, 0, modCounter, deadline)
+        );
+
+        return abi.decode(res, (uint256, uint256));
+    }
+
+    function donate(
+        PoolKey calldata poolKey,
+        uint256 amount0,
+        uint256 amount1,
+        uint256 deadline
+    ) public payable returns (uint256, uint256) {
+        donations[doCount] = [amount0, amount1];
+        bytes memory res = poolManager.lock(
+            abi.encode(poolKey, 2, doCount, deadline)
         );
 
         return abi.decode(res, (uint256, uint256));
@@ -90,7 +107,15 @@ contract UniSwapTest {
             delta = poolManager.swap(poolKey, swaps[counter], "0x");
             modSwap++;
         }
-
+        if (action == 2) {
+            delta = poolManager.donate(
+                poolKey,
+                donations[counter][0],
+                donations[counter][0],
+                "0x"
+            );
+            doCount++;
+        }
         _settleCurrencyBalance(poolKey.currency0, delta.amount0());
         _settleCurrencyBalance(poolKey.currency1, delta.amount1());
         res = abi.encode(delta.amount0(), delta.amount1());
@@ -103,7 +128,7 @@ contract UniSwapTest {
     ) private {
         if (deltaAmount < 0) {
             console.log("Amount:", uint128(-deltaAmount));
-            poolManager.take(currency, msg.sender, uint128(-deltaAmount));
+            poolManager.take(currency, address(this), uint128(-deltaAmount));
             return;
         }
 
