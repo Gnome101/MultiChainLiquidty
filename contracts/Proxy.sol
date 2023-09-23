@@ -10,5 +10,14 @@ contract Proxy is ERC20 {
         manager = _manager;
     }
 
-    function mint(uint256 amount) public {}
+    function mint(uint256 amount) public {
+        require(msg.sender == manager);
+
+        _mint(manager, amount);
+    }
+
+    function burn(uint256 amount) public {
+        require(msg.sender == manager);
+        _burn(manager, amount);
+    }
 }
