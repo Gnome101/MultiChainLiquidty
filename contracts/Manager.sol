@@ -7,23 +7,45 @@ import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolId.sol";
 import {IPoolManager} from "@uniswap/v4-core/contracts/PoolManager.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
+import "./Hyperlane/IMailbox.sol";
+import "./Hyperlane/IInterchainGasPayMaster.sol";
 
-contract myThing {
+import "./IMessageRecipient.sol";
+import "./ISM/IMultisigISM.sol";
+
+contract Manager is IMessageRecipient {
     UniswapInteract public immutable uniswapInteract;
     IPoolManager public immutable poolManager;
     Proxy public proxyToken;
     address public proxyAddy;
     PoolKey public poolKey;
     mapping(address => bool) public approvedToken;
+    mapping(uint256 => address) public domainToAddress; //Domain to Manager address
+    uint256 public count;
 
-    constructor(address _uI, address _poolManager) {
+    //Hyperlane Stuff:
+    IMailbox public immutable mailBox;
+    IInterchainGasPaymaster public immutable igp;
+
+    constructor(
+        address _uI,
+        address _poolManager,
+        address _mailBox,
+        address _igp
+    ) {
         uniswapInteract = UniswapInteract(_uI);
         poolManager = IPoolManager(_poolManager);
+        mailBox = IMailbox(_mailBox);
+        igp = IInterchainGasPaymaster(_igp);
     }
 
     function setProxyToken(address _proxyToken) public {
         proxyToken = Proxy(_proxyToken);
         proxyAddy = _proxyToken;
+    }
+
+    function addDomain(uint256 domain, address managerAddress) public {
+        domainToAddress[domain] = managerAddress;
     }
 
     function createPosition(
@@ -58,12 +80,62 @@ contract myThing {
         );
     }
 
-    function swap(address token, uint256 tokenAmount) public {
+    //zeroForOne - true - 4295128740
+    //zeroForOne - false - 1461446703485210103287273052203988822378723970342
+    function swap(address token, bool toProxy, int256 tokenAmount) public {
         //uniswapInteract
+        bool zeroForOne;
+        if (token < proxyAddy) {
+            //token is 0
+            zeroForOne = true;
+            zeroForOne == toProxy ? true : false;
+        } else {
+            zeroForOne = false;
+            zeroForOne == toProxy ? false : true;
+        }
         uniswapInteract.swap(
             poolKey,
-            IPoolManager.ModifyPositionParams(lower, upper, int128(liquidity)),
+            IPoolManager.SwapParams(
+                zeroForOne,
+                tokenAmount,
+                zeroForOne
+                    ? 4295128740
+                    : 1461446703485210103287273052203988822378723970342
+            ),
             block.timestamp + 10000000
         );
     }
+
+    function handle(
+        uint32 _origin,
+        bytes32 _sender,
+        bytes calldata _body
+    ) external {
+        count++;
+    }
+
+    function addressToBytes32(address _addr) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(_addr)));
+    }
+
+    function poke(uint32 domain) public {
+        uint256 gasAmount = 100000;
+        bytes32 _messageId = mailBox.dispatch(
+            domain,
+            addressToBytes32(domainToAddress[domain]),
+            abi.encode(msg.sender)
+            //abi.encode(message)
+        );
+
+        uint256 quote = igp.quoteGasPayment(domain, gasAmount);
+        // Pay from the contract's balance
+        igp.payForGas{value: quote}(
+            _messageId, // The ID of the message that was just dispatched
+            domain, // The destination domain of the message
+            gasAmount,
+            address(this) // refunds are returned to this contract
+        );
+    }
+
+    receive() external payable {}
 }
