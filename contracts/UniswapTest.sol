@@ -8,7 +8,7 @@ import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolId.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
+import "@uniswap/v4-core/contracts/types/PoolId.sol";
 error SwapExpired();
 error OnlyPoolManager();
 
@@ -21,6 +21,10 @@ contract UniSwapTest {
 
     constructor(IPoolManager _poolManager) {
         poolManager = _poolManager;
+    }
+
+    function getID(PoolKey memory poolKey) public pure returns (PoolId) {
+        return PoolIdLibrary.toId(poolKey);
     }
 
     function addLiquidity(

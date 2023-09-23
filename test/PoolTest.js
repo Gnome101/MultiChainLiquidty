@@ -71,5 +71,8 @@ describe("Pool Test ", async function () {
       ModifyPositionParams,
       timeStamp + 100000000
     );
+    const poolID = await uniswapTest.getID(poolKey);
+    const liq = await poolManager.getLiquidity(poolID);
+    console.log(liq.toString());
   });
 });
