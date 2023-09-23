@@ -42,6 +42,7 @@ module.exports = {
         url: MAINNET_RPC_URL,
         blockNumber: 16403320,
       },
+      allowUnlimitedContractSize: true,
       chainId: 31337,
     },
     localhost: {
@@ -119,7 +120,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.10",
+        version: "0.8.20",
         settings: {
           evmVersion: "istanbul",
           optimizer: {

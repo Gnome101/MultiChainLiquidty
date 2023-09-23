@@ -1,5 +1,5 @@
 Arguments: 
-  /home/thegnome/.nvm/versions/node/v18.8.0/bin/node /home/thegnome/.cache/node/corepack/yarn/1.22.19/bin/yarn.js add --dev @nomicfoundation/hardhat-toolbox/network-helpers
+  /home/thegnome/.nvm/versions/node/v18.8.0/bin/node /home/thegnome/.cache/node/corepack/yarn/1.22.19/bin/yarn.js add @uniswap/v4-core
 
 PATH: 
   /home/thegnome/.vscode-server/bin/abd2f3db4bdb28f9e95536dfa84d8479f1eb312d/bin/remote-cli:/home/thegnome/.nvm/versions/node/v18.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/windows/system32:/mnt/c/windows:/mnt/c/windows/System32/Wbem:/mnt/c/windows/System32/WindowsPowerShell/v1.0/:/mnt/c/windows/System32/OpenSSH/:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA NvDLISR:/mnt/c/Users/Administrator/AppData/Local/Microsoft/WindowsApps:/mnt/c/Program Files/HP/OMEN-Broadcast/Common:/mnt/c/Program Files/nodejs/:/mnt/c/Users/alexf/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/alexf/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/alexf/AppData/Roaming/npm:/snap/bin
@@ -14,8 +14,8 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@nomicfoundation%2fhardhat-toolbox/network-helpers: Request "https://registry.yarnpkg.com/@nomicfoundation%2fhardhat-toolbox/network-helpers" returned a 405
-      at params.callback [as _callback] (/home/thegnome/.cache/node/corepack/yarn/1.22.19/lib/cli.js:66154:18)
+  Error: https://registry.yarnpkg.com/@uniswap%2fv4-core: Not found
+      at params.callback [as _callback] (/home/thegnome/.cache/node/corepack/yarn/1.22.19/lib/cli.js:66145:18)
       at self.callback (/home/thegnome/.cache/node/corepack/yarn/1.22.19/lib/cli.js:140890:22)
       at Request.emit (node:events:513:28)
       at Request.<anonymous> (/home/thegnome/.cache/node/corepack/yarn/1.22.19/lib/cli.js:141862:10)
@@ -30,6 +30,7 @@ npm manifest:
   {
     "devDependencies": {
       "@nomicfoundation/hardhat-ethers": "^3.0.2",
+      "@nomicfoundation/hardhat-verify": "^1.1.1",
       "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
       "@nomiclabs/hardhat-etherscan": "^3.1.7",
       "@nomiclabs/hardhat-waffle": "^2.0.6",
@@ -47,7 +48,7 @@ npm manifest:
       "solidity-coverage": "^0.8.4"
     },
     "dependencies": {
-      "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
+      "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
       "@openzeppelin/contracts": "^4.9.2",
       "@uniswap/v2-periphery": "^1.1.0-beta.0",
       "@uniswap/v3-core": "^1.0.1",
@@ -883,12 +884,27 @@ Lockfile:
     dependencies:
       debug "^4.1.1"
   
-  "@nomicfoundation/hardhat-network-helpers@^1.0.8":
+  "@nomicfoundation/hardhat-network-helpers@^1.0.9":
     version "1.0.9"
     resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-network-helpers/-/hardhat-network-helpers-1.0.9.tgz#767449e8a2acda79306ac84626117583d95d25aa"
     integrity sha512-OXWCv0cHpwLUO2u7bFxBna6dQtCC2Gg/aN/KtJLO7gmuuA28vgmVKYFRCDUqrbjujzgfwQ2aKyZ9Y3vSmDqS7Q==
     dependencies:
       ethereumjs-util "^7.1.4"
+  
+  "@nomicfoundation/hardhat-verify@^1.1.1":
+    version "1.1.1"
+    resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-verify/-/hardhat-verify-1.1.1.tgz#6a433d777ce0172d1f0edf7f2d3e1df14b3ecfc1"
+    integrity sha512-9QsTYD7pcZaQFEA3tBb/D/oCStYDiEVDN7Dxeo/4SCyHRSm86APypxxdOMEPlGmXsAvd+p1j/dTODcpxb8aztA==
+    dependencies:
+      "@ethersproject/abi" "^5.1.2"
+      "@ethersproject/address" "^5.0.2"
+      cbor "^8.1.0"
+      chalk "^2.4.2"
+      debug "^4.1.1"
+      lodash.clonedeep "^4.5.0"
+      semver "^6.3.0"
+      table "^6.8.0"
+      undici "^5.14.0"
   
   "@nomicfoundation/solidity-analyzer-darwin-arm64@0.1.1":
     version "0.1.1"
@@ -4080,6 +4096,11 @@ Lockfile:
     version "4.3.0"
     resolved "https://registry.yarnpkg.com/lodash.camelcase/-/lodash.camelcase-4.3.0.tgz#b28aa6288a2b9fc651035c7711f65ab6190331a6"
     integrity sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==
+  
+  lodash.clonedeep@^4.5.0:
+    version "4.5.0"
+    resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
+    integrity sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==
   
   lodash.truncate@^4.4.2:
     version "4.4.2"

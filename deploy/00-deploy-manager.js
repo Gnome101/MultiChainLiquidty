@@ -9,7 +9,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   let facetCut = [];
   //Deploying Diamond Init
   const timeStamp = (await ethers.provider.getBlock("latest")).timestamp;
-  args = [timeStamp + 10];
+  args = [500000];
   const Lock = await deploy("Lock", {
     from: deployer,
     args: args,
