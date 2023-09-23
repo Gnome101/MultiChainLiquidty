@@ -12,13 +12,19 @@ library PoolGetters {
     uint256 constant TICKS_OFFSET = 4;
     uint256 constant TICK_BITMAP_OFFSET = 5;
 
-    function getNetLiquidityAtTick(IPoolManager poolManager, PoolId poolId, int24 tick)
-        internal
-        view
-        returns (int128 l)
-    {
+    function getNetLiquidityAtTick(
+        IPoolManager poolManager,
+        PoolId poolId,
+        int24 tick
+    ) internal view returns (int128 l) {
         bytes32 value = poolManager.extsload(
-            keccak256(abi.encode(tick, uint256(keccak256(abi.encode(poolId, POOL_SLOT))) + TICKS_OFFSET))
+            keccak256(
+                abi.encode(
+                    tick,
+                    uint256(keccak256(abi.encode(poolId, POOL_SLOT))) +
+                        TICKS_OFFSET
+                )
+            )
         );
 
         assembly {
@@ -26,14 +32,20 @@ library PoolGetters {
         }
     }
 
-    function getTickBitmapAtWord(IPoolManager poolManager, PoolId poolId, int16 word)
-        internal
-        view
-        returns (uint256 bm)
-    {
+    function getTickBitmapAtWord(
+        IPoolManager poolManager,
+        PoolId poolId,
+        int16 word
+    ) internal view returns (uint256 bm) {
         bm = uint256(
             poolManager.extsload(
-                keccak256(abi.encode(word, uint256(keccak256(abi.encode(poolId, POOL_SLOT))) + TICK_BITMAP_OFFSET))
+                keccak256(
+                    abi.encode(
+                        word,
+                        uint256(keccak256(abi.encode(poolId, POOL_SLOT))) +
+                            TICK_BITMAP_OFFSET
+                    )
+                )
             )
         );
     }
@@ -62,27 +74,44 @@ library PoolGetters {
                 // all the 1s at or to the right of the current bitPos
                 uint256 mask = (1 << bitPos) - 1 + (1 << bitPos);
                 // uint256 masked = self[wordPos] & mask;
-                uint256 masked = getTickBitmapAtWord(poolManager, poolId, wordPos) & mask;
+                uint256 masked = getTickBitmapAtWord(
+                    poolManager,
+                    poolId,
+                    wordPos
+                ) & mask;
 
                 // if there are no initialized ticks to the right of or at the current tick, return rightmost in the word
                 initialized = masked != 0;
                 // overflow/underflow is possible, but prevented externally by limiting both tickSpacing and tick
                 next = initialized
-                    ? (compressed - int24(uint24(bitPos - BitMath.mostSignificantBit(masked)))) * tickSpacing
+                    ? (compressed -
+                        int24(
+                            uint24(bitPos - BitMath.mostSignificantBit(masked))
+                        )) * tickSpacing
                     : (compressed - int24(uint24(bitPos))) * tickSpacing;
             } else {
                 // start from the word of the next tick, since the current tick state doesn't matter
                 (int16 wordPos, uint8 bitPos) = position(compressed + 1);
                 // all the 1s at or to the left of the bitPos
                 uint256 mask = ~((1 << bitPos) - 1);
-                uint256 masked = getTickBitmapAtWord(poolManager, poolId, wordPos) & mask;
+                uint256 masked = getTickBitmapAtWord(
+                    poolManager,
+                    poolId,
+                    wordPos
+                ) & mask;
 
                 // if there are no initialized ticks to the left of the current tick, return leftmost in the word
                 initialized = masked != 0;
                 // overflow/underflow is possible, but prevented externally by limiting both tickSpacing and tick
                 next = initialized
-                    ? (compressed + 1 + int24(uint24(BitMath.leastSignificantBit(masked) - bitPos))) * tickSpacing
-                    : (compressed + 1 + int24(uint24(type(uint8).max - bitPos))) * tickSpacing;
+                    ? (compressed +
+                        1 +
+                        int24(
+                            uint24(BitMath.leastSignificantBit(masked) - bitPos)
+                        )) * tickSpacing
+                    : (compressed +
+                        1 +
+                        int24(uint24(type(uint8).max - bitPos))) * tickSpacing;
             }
         }
     }
@@ -91,7 +120,9 @@ library PoolGetters {
     /// @param tick The tick for which to compute the position
     /// @return wordPos The key in the mapping containing the word in which the bit is stored
     /// @return bitPos The bit position in the word where the flag is stored
-    function position(int24 tick) private pure returns (int16 wordPos, uint8 bitPos) {
+    function position(
+        int24 tick
+    ) private pure returns (int16 wordPos, uint8 bitPos) {
         unchecked {
             wordPos = int16(tick >> 8);
             bitPos = uint8(int8(tick % 256));

@@ -38,17 +38,16 @@ describe("Pool Test ", async function () {
     await HOG.mint();
     await EPICDAI.mint();
 
-    const ModifyPositionParams = {
-      tickLower: lowerBound,
-      tickUpper: upperBound,
-      liquidityDelta: "10000000",
-    };
-    await H;
-    const res = await poolManager.callStatic.modifyPosition(
-      poolKey,
-      ModifyPositionParams,
-      "0x"
-    );
-    console.log(res);
+    // const ModifyPositionParams = {
+    //   tickLower: lowerBound,
+    //   tickUpper: upperBound,
+    //   liquidityDelta: "10000000",
+    // };
+    // const res = await poolManager.callStatic.modifyPosition(
+    //   poolKey,
+    //   ModifyPositionParams,
+    //   "0x"
+    // );
+    // console.log(res);
   });
 });

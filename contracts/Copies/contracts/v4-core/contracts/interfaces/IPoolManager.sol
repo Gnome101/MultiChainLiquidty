@@ -202,7 +202,7 @@ interface IPoolManager is IFees, IERC1155 {
     /// @notice Called by external contracts to access granular pool state
     /// @param slot Key of slot to sload
     /// @return value The value of the slot as bytes32
-    function extsload(bytes32 slot) external view returns (bytes32 value);
+    //function extsload(bytes32 slot) external view returns (bytes32 value);
 
     /// @notice Called by external contracts to access granular pool state
     /// @param slot Key of slot to start sloading from
