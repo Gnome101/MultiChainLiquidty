@@ -16,10 +16,16 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     log: true,
     blockConfirmations: 2,
   });
-  console.log(PoolManager.address);
 
   args = [PoolManager.address];
   const Router = await deploy("UniSwapTest", {
+    from: deployer,
+    args: args,
+    log: true,
+    blockConfirmations: 2,
+  });
+  args = [];
+  const HookFactory = await deploy("UniswapHooksFactory", {
     from: deployer,
     args: args,
     log: true,

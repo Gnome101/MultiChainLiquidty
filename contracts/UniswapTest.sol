@@ -39,7 +39,6 @@ contract UniSwapTest {
         IPoolManager.ModifyPositionParams calldata modifyLiquidtyParams,
         uint256 deadline
     ) public payable returns (uint256, uint256) {
-        console.log(modCounter, "adding");
         modificaitons[modCounter] = modifyLiquidtyParams;
         bytes memory res = poolManager.lock(
             abi.encode(poolKey, 0, modCounter, deadline)
@@ -64,8 +63,6 @@ contract UniSwapTest {
     function lockAcquired(
         bytes calldata data
     ) external returns (bytes memory res) {
-        console.log("Hello!!");
-        console.log(msg.sender, address(poolManager));
         if (msg.sender != address(poolManager)) {
             revert OnlyPoolManager();
         }
@@ -82,7 +79,6 @@ contract UniSwapTest {
         }
         BalanceDelta delta;
         if (action == 0) {
-            console.log("Modifying Position");
             delta = poolManager.modifyPosition(
                 poolKey,
                 modificaitons[counter],
@@ -91,7 +87,6 @@ contract UniSwapTest {
             modCounter++;
         }
         if (action == 1) {
-            console.log("Swapping...");
             delta = poolManager.swap(poolKey, swaps[counter], "0x");
             modSwap++;
         }
@@ -106,9 +101,6 @@ contract UniSwapTest {
         Currency currency,
         int128 deltaAmount
     ) private {
-        console.log("lock");
-        console.log(msg.sender);
-        console.log(uint128(deltaAmount));
         if (deltaAmount < 0) {
             console.log("Amount:", uint128(-deltaAmount));
             poolManager.take(currency, msg.sender, uint128(-deltaAmount));
