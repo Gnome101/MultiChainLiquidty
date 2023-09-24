@@ -25,16 +25,20 @@ describe("Pool Test ", async function () {
     // routeFacet = await ethers.getContract("RouterFacet");
     // caller = await ethers.getContract("UniswapV4Caller");
     uniswapInteract = await ethers.getContract("UniswapInteract");
-    manager = await ethers.getContract("Manager");
-    // hookFactory = await ethers.getContract("UniswapHooksFactory");
+    //manager = await ethers.getContract("Manager");
+    hookFactory = await ethers.getContract("UniswapHooksFactory");
   });
   it("can initialze my own pool 12", async () => {
     //I need key, sqrtPrice, and hookData
-    const proxyToken = await manager.proxyToken();
-    console.log(proxyToken);
-    const hook = "0x0000000000000000000000000000000000000000";
+    const hook = await hookFactory.hooks(0);
+    const manager = await ethers.getContractAt("Manager", hook);
+    console.log("Ohh yeahh");
+    const proxyTokenAddy = await manager.proxyToken();
+    const proxyToken = await ethers.getContractAt("EPICDAI", proxyTokenAddy);
+
+    // const hook = "0x0000000000000000000000000000000000000000";
     // console.log(deployer.address);
-    const adresses = [EPICDAI.target, proxyToken];
+    const adresses = [EPICDAI.target, proxyToken.target];
     adresses.sort();
     // console.log(adresses);
     const poolKey = {
@@ -49,7 +53,11 @@ describe("Pool Test ", async function () {
     const hookData = hook;
     // await poolManager.initialize(poolKey, sqrtPrice.toFixed(), "0x");
     //Modify positon params
-    await manager.initialize(EPICDAI.target, sqrtPrice.toFixed(), "0x");
+    await manager.initializeProxyPool(
+      EPICDAI.target,
+      sqrtPrice.toFixed(),
+      "0x"
+    );
     const lowerBound = 0 - 60 * 10;
     const upperBound = 0 + 60 * 10;
     await EPICDAI.mint();
@@ -64,7 +72,7 @@ describe("Pool Test ", async function () {
       upperBound
     );
     const amount1 = "10000000000000000000"; //10
-    await EPICDAI.transfer(manager.target, amount1);
+    await EPICDAI.transfer(manager.target, "100000000000000000000");
 
     await manager.swap(EPICDAI.target, true, amount1);
 
@@ -77,6 +85,33 @@ describe("Pool Test ", async function () {
       HOG.target
     );
     console.log("HERE", (await manager.proxyAmount()).toString());
+    await proxyToken.approve(manager.target, "300000000000000000000");
+    await manager.swap(EPICDAI.target, true, amount1);
+    console.log(
+      "PRX",
+      (await proxyToken.balanceOf(deployer.address)).toString()
+    );
+    // await manager.createBoost(
+    //   5,
+    //   "1000000000000000000",
+    //   [EPICDAI.target],
+    //   [100]
+    // );
+    console.log(
+      "PRX",
+      (await proxyToken.balanceOf(deployer.address)).toString()
+    );
+    console.log("After boost..");
+    stack = "1000000000000000"; //100
+
+    await EPICDAI.mint();
+    await EPICDAI.transfer(manager.target, stack);
+    await manager.swap(EPICDAI.target, true, stack);
+    await EPICDAI.transfer(manager.target, stack);
+    await manager.swap(EPICDAI.target, true, stack);
+    console.log("JKAW");
+
+    console.log((await manager.counterBeforeSwap()).toString());
 
     await manager.closePosition(EPICDAI.target, lowerBound, upperBound);
   });

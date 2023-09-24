@@ -159,19 +159,21 @@ contract UniswapInteract {
         }
         _settleCurrencyBalance(poolKey.currency0, delta.amount0());
         _settleCurrencyBalance(poolKey.currency1, delta.amount1());
+        if (action != 2) {
+            IERC20(Currency.unwrap(poolKey.currency0)).safeTransfer(
+                user,
+                IERC20(Currency.unwrap(poolKey.currency0)).balanceOf(
+                    (address(this))
+                )
+            );
 
-        IERC20(Currency.unwrap(poolKey.currency0)).safeTransfer(
-            user,
-            IERC20(Currency.unwrap(poolKey.currency0)).balanceOf(
-                (address(this))
-            )
-        );
-        IERC20(Currency.unwrap(poolKey.currency1)).safeTransfer(
-            user,
-            IERC20(Currency.unwrap(poolKey.currency1)).balanceOf(
-                (address(this))
-            )
-        );
+            IERC20(Currency.unwrap(poolKey.currency1)).safeTransfer(
+                user,
+                IERC20(Currency.unwrap(poolKey.currency1)).balanceOf(
+                    (address(this))
+                )
+            );
+        }
 
         res = abi.encode(delta.amount0(), delta.amount1());
         //return new bytes();

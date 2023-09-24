@@ -8,8 +8,8 @@ contract UniswapHooksFactory {
     address[] public hooks;
 
     function deploy(
-        address poolManager,
         address IUniswapInteract,
+        address poolManager,
         address IMailbox,
         address IInterchainGasPayMaster,
         bytes32 salt
@@ -18,8 +18,8 @@ contract UniswapHooksFactory {
         hooks.push(
             address(
                 new Manager{salt: salt}(
-                    poolManager,
                     IUniswapInteract,
+                    poolManager,
                     IMailbox,
                     IInterchainGasPayMaster
                 )
@@ -29,8 +29,8 @@ contract UniswapHooksFactory {
 
     function getPrecomputedHookAddress(
         address owner,
-        address poolManager,
         address uniswapInteraction,
+        address poolManager,
         address mailBox,
         address igp,
         bytes32 salt
@@ -39,7 +39,7 @@ contract UniswapHooksFactory {
         bytes32 bytecodeHash = keccak256(
             abi.encodePacked(
                 type(Manager).creationCode,
-                abi.encode(poolManager, uniswapInteraction, mailBox, igp)
+                abi.encode(uniswapInteraction, poolManager, mailBox, igp)
             )
         );
         bytes32 hash = keccak256(

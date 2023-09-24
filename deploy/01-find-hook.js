@@ -15,24 +15,27 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
   let salt;
   let finalAddress;
-  for (let i = 0; i < 1500; i++) {
+  for (let i = 0; i < 2500; i++) {
     salt = ethers.toBeHex(i);
     //console.log(salt);
     salt = ethers.zeroPadValue(salt, 32);
     //console.log(salt);
-    // salt = ethers.zeroPadValue(
-    //   "0x0000000000000000000000000000000000000000000000000000000000000357",
-    //   32
-    // );
+    salt = ethers.zeroPadValue(
+      "0x0000000000000000000000000000000000000000000000000000000000000193",
+      32
+    );
     let expectedAddress = await hookFactory.getPrecomputedHookAddress(
       owner,
+      uniswapInteract.target,
       poolManager.target,
+      "0x07A9c3e93EA8A5A01695572d6851329564A77eF8",
+      "0x15A980eaaF79584C9Cfe473Bb575686cA113A8f9",
       salt
     );
     finalAddress = expectedAddress;
     //console.log(i, "Address:", expectedAddress);
     expectedAddress = expectedAddress;
-    if (_doesAddressStartWith(expectedAddress, 0x08)) {
+    if (_doesAddressStartWith(expectedAddress, 0x8c)) {
       console.log("this is the right salt", salt);
       break;
     }
@@ -42,7 +45,13 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     // console.log(_address.substring(0, 4), ethers.toBeHex(_prefix).toString());
     return _address.substring(0, 4) == ethers.toBeHex(_prefix).toString();
   }
-  await hookFactory.deploy(poolManager.target, salt);
+  await hookFactory.deploy(
+    uniswapInteract.target,
+    poolManager.target,
+    "0x07A9c3e93EA8A5A01695572d6851329564A77eF8",
+    "0x15A980eaaF79584C9Cfe473Bb575686cA113A8f9",
+    salt
+  );
   console.log("Deployed with address:", finalAddress);
   console.log("Chain", chainId);
   if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {

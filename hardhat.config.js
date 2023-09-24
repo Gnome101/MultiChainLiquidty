@@ -127,7 +127,7 @@ module.exports = {
           evmVersion: "istanbul",
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 10000,
           },
         },
       },
