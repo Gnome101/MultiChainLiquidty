@@ -24,18 +24,40 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     log: true,
     blockConfirmations: 2,
   });
-  args = [];
-  const HookFactory = await deploy("UniswapHooksFactory", {
+  //Scroll:
+  args = [
+    Router.address,
+    PoolManager.address,
+    "0x07A9c3e93EA8A5A01695572d6851329564A77eF8",
+    "0x15A980eaaF79584C9Cfe473Bb575686cA113A8f9",
+  ];
+
+  const Manager = await deploy("Manager", {
     from: deployer,
     args: args,
     log: true,
     blockConfirmations: 2,
   });
+  args = [Manager.address];
+  const ProxyToken = await deploy("Proxy", {
+    from: deployer,
+    args: args,
+    log: true,
+    blockConfirmations: 2,
+  });
+  const manager = await ethers.getContract("Manager");
+  await manager.setProxyToken(ProxyToken.address);
+  // const HookFactory = await deploy("UniswapHooksFactory", {
+  //   from: deployer,
+  //   args: args,
+  //   log: true,
+  //   blockConfirmations: 2,
+  // });
 
-  console.log("Chain", chainId);
-  if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
-    log("Verifying...");
-    await verify(Lock.address, args);
-  }
+  // console.log("Chain", chainId);
+  // if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
+  //   log("Verifying...");
+  //   await verify(Lock.address, args);
+  // }
 };
-module.exports.tags = ["all", "Pool"];
+module.exports.tags = ["all", "Pool", "Local"];

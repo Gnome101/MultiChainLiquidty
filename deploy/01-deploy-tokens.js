@@ -28,4 +28,4 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     await verify(EPICDAI.address, args);
   }
 };
-module.exports.tags = ["all", "Tokens"];
+module.exports.tags = ["all", "Tokens", "Local"];

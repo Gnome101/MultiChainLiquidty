@@ -1,24 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
-// import "./UniswapInteract.sol";
-// import "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
-// import "./Proxy.sol";
-// import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolId.sol";
-// import {IPoolManager} from "@uniswap/v4-core/contracts/PoolManager.sol";
+import "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
+import "./Proxy.sol";
+import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolId.sol";
+import {IPoolManager} from "@uniswap/v4-core/contracts/PoolManager.sol";
 import "hardhat/console.sol";
 import "./Hyperlane/IMailbox.sol";
 import "./Hyperlane/IInterchainGasPayMaster.sol";
-
-import "./IMessageRecipient.sol";
+import "@uniswap/v3-core/contracts/libraries/TransferHelper.sol";
+import "./ISM/IEmptyIsm.sol";
 import "./ISM/IMultisigISM.sol";
+import "./IUniswapInteract.sol";
 
-contract Manager is IMessageRecipient {
-    // UniswapInteract public immutable uniswapInteract;
-    // IPoolManager public immutable poolManager;
-    // Proxy public proxyToken;
-    // address public proxyAddy;
-    // PoolKey public poolKey;
-    // mapping(address => bool) public approvedToken;
+contract Manager {
+    UniswapInteract public immutable uniswapInteract;
+    IPoolManager public immutable poolManager;
+    Proxy public proxyToken;
+    address public proxyAddy;
+    //PoolKey public poolKey;
+    mapping(address => PoolKey) public tokenToKey;
+    mapping(address => bool) public approvedToken;
     mapping(uint256 => address) public domainToAddress; //Domain to Manager address
     uint256 public count;
 
@@ -27,83 +28,162 @@ contract Manager is IMessageRecipient {
     IInterchainGasPaymaster public immutable igp;
 
     constructor(
-        // address _uI,
-        // address _poolManager,
+        address _uI,
+        address _poolManager,
         address _mailBox,
         address _igp
     ) {
-        // uniswapInteract = UniswapInteract(_uI);
-        // poolManager = IPoolManager(_poolManager);
+        uniswapInteract = UniswapInteract(_uI);
+        poolManager = IPoolManager(_poolManager);
         mailBox = IMailbox(_mailBox);
         igp = IInterchainGasPaymaster(_igp);
     }
 
-    // function setProxyToken(address _proxyToken) public {
-    //     proxyToken = Proxy(_proxyToken);
-    //     proxyAddy = _proxyToken;
-    // }
+    function setProxyToken(address _proxyToken) public {
+        proxyToken = Proxy(_proxyToken);
+        proxyAddy = _proxyToken;
+    }
 
     function addDomain(uint256 domain, address managerAddress) public {
         domainToAddress[domain] = managerAddress;
     }
 
-    // function createPosition(
-    //     address token,
-    //     uint256 tokenAmount,
-    //     int24 lower,
-    //     int24 upper
-    // ) public {
-    //     uint128 liquidity = 0;
+    function createPosition(
+        address token,
+        uint256 tokenAmount,
+        int24 lower,
+        int24 upper
+    ) public {
+        uint128 liquidity = 0;
 
-    //     uint160 sqrtA = TickMath.getSqrtRatioAtTick(lower);
-    //     uint160 sqrtB = TickMath.getSqrtRatioAtTick(upper);
-    //     if (token < proxyAddy) {
-    //         //token is 0
-    //         liquidity = LiquidityAmounts.getLiquidityForAmount0(
-    //             sqrtA,
-    //             sqrtB,
-    //             tokenAmount
-    //         );
-    //     } else {
-    //         liquidity = LiquidityAmounts.getLiquidityForAmount1(
-    //             sqrtA,
-    //             sqrtB,
-    //             tokenAmount
-    //         );
-    //     }
-    //     //uniswapInteract
-    //     uniswapInteract.addLiquidity(
-    //         poolKey,
-    //         IPoolManager.ModifyPositionParams(lower, upper, int128(liquidity)),
-    //         block.timestamp + 10000000
-    //     );
-    // }
+        uint160 sqrtA = TickMath.getSqrtRatioAtTick(lower);
+        uint160 sqrtB = TickMath.getSqrtRatioAtTick(upper);
+        if (token < proxyAddy) {
+            //token is 0
+            liquidity = LiquidityAmounts.getLiquidityForAmount0(
+                sqrtA,
+                sqrtB,
+                tokenAmount
+            );
+        } else {
+            liquidity = LiquidityAmounts.getLiquidityForAmount1(
+                sqrtA,
+                sqrtB,
+                tokenAmount
+            );
+        }
+        //uniswapInteract
+        uint256 bigAmount = 1000000000000000000000000000;
+        proxyToken.mint(bigAmount);
+        (uint256 t0Amount, uint256 t1Amount) = uniswapInteract.addLiquidity(
+            tokenToKey[token],
+            IPoolManager.ModifyPositionParams(lower, upper, int128(liquidity)),
+            block.timestamp + 10000000
+        );
+        if (token < proxyAddy) {
+            //token is 0
+            TransferHelper.safeTransfer(address(token), msg.sender, t0Amount);
+            proxyToken.burn(bigAmount - t1Amount);
+        } else {
+            //token is 1
+            TransferHelper.safeTransfer(address(token), msg.sender, t1Amount);
+            proxyToken.burn(bigAmount - t0Amount);
+        }
+    }
 
-    // //zeroForOne - true - 4295128740
-    // //zeroForOne - false - 1461446703485210103287273052203988822378723970342
-    // function swap(address token, bool toProxy, int256 tokenAmount) public {
-    //     //uniswapInteract
-    //     bool zeroForOne;
-    //     if (token < proxyAddy) {
-    //         //token is 0
-    //         zeroForOne = true;
-    //         zeroForOne == toProxy ? true : false;
-    //     } else {
-    //         zeroForOne = false;
-    //         zeroForOne == toProxy ? false : true;
-    //     }
-    //     uniswapInteract.swap(
-    //         poolKey,
-    //         IPoolManager.SwapParams(
-    //             zeroForOne,
-    //             tokenAmount,
-    //             zeroForOne
-    //                 ? 4295128740
-    //                 : 1461446703485210103287273052203988822378723970342
-    //         ),
-    //         block.timestamp + 10000000
-    //     );
-    // }
+    function closePosition(address token, int24 lower, int24 upper) public {
+        (int128 t0Amount, int128 t1Amount) = uniswapInteract.closePosition(
+            tokenToKey[token],
+            lower,
+            upper,
+            block.timestamp + 100000000
+        );
+        if (token < proxyAddy) {
+            //token is 0
+            //transfer to user??
+            TransferHelper.safeTransfer(
+                address(Currency.unwrap(tokenToKey[token].currency0)),
+                msg.sender,
+                uint128(-t0Amount)
+            );
+            proxyToken.burn(uint128(-t1Amount));
+        } else {
+            TransferHelper.safeTransfer(
+                address(Currency.unwrap(tokenToKey[token].currency0)),
+                msg.sender,
+                uint128(-t1Amount)
+            );
+            proxyToken.burn(uint128(-t0Amount));
+        }
+    }
+
+    //zeroForOne - true - 4295128740
+    //zeroForOne - false - 1461446703485210103287273052203988822378723970342
+    function swap(address token, bool toProxy, int256 tokenAmount) public {
+        //uniswapInteract
+        bool zeroForOne;
+        if (token < proxyAddy) {
+            //token is 0
+            zeroForOne = true;
+            zeroForOne == toProxy ? true : false;
+        } else {
+            zeroForOne = false;
+            zeroForOne == toProxy ? false : true;
+        }
+        uniswapInteract.swap(
+            tokenToKey[token],
+            IPoolManager.SwapParams(
+                zeroForOne,
+                tokenAmount,
+                zeroForOne
+                    ? 4295128740
+                    : 1461446703485210103287273052203988822378723970342
+            ),
+            block.timestamp + 10000000
+        );
+    }
+
+    function swapToOtherChain(
+        address token,
+        bool toProxy,
+        int256 tokenAmount,
+        uint32 domainGoal,
+        address endingAsset
+    ) public {
+        //uniswapInteract
+        bool zeroForOne;
+        if (token < proxyAddy) {
+            //token is 0
+            zeroForOne = true;
+            zeroForOne == toProxy ? true : false;
+        } else {
+            zeroForOne = false;
+            zeroForOne == toProxy ? false : true;
+        }
+        (uint256 t0, uint256 t1) = uniswapInteract.swap(
+            tokenToKey[token],
+            IPoolManager.SwapParams(
+                zeroForOne,
+                tokenAmount,
+                zeroForOne
+                    ? 4295128740
+                    : 1461446703485210103287273052203988822378723970342
+            ),
+            block.timestamp + 10000000
+        );
+
+        //Now transfer the amount of proxy tokens that they just earend
+        if (toProxy) {
+            //token is 0
+            if (zeroForOne) {
+                proxyAmount = t1;
+            } else {
+                proxyAmount = t0;
+            }
+        }
+    }
+
+    uint256 public proxyAmount;
 
     function handle(
         uint32 _origin,
