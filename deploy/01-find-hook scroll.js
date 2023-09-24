@@ -33,9 +33,9 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     let expectedAddress = await hookFactory.getPrecomputedHookAddress(
       owner,
       uniswapInteract.target,
-      gnosisPoolManagerAddress,
-      gnosisMailBox,
-      gnosisIGP,
+      scrollPoolManagerAddress,
+      scrollMailBox,
+      scrollIGP,
       salt
     );
     finalAddress = expectedAddress;
@@ -54,12 +54,12 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   }
   await hookFactory.deploy(
     uniswapInteract.target,
-    gnosisPoolManagerAddress,
-    gnosisMailBox,
-    gnosisIGP,
+    scrollPoolManagerAddress,
+    scrollMailBox,
+    scrollIGP,
     salt
   );
   console.log("Deployed with address:", finalAddress);
   console.log("Chain", chainId);
 };
-module.exports.tags = ["all", "Need", "Local"];
+module.exports.tags = ["all", "Scroll"];

@@ -8,7 +8,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   const chainId = network.config.chainId;
   log("------------------------------------------------------------");
   let args = [];
-  const Manager = await deploy("EmptyIsm", {
+  const EmptyIsm = await deploy("EmptyIsm", {
     from: deployer,
     args: args,
     log: true,

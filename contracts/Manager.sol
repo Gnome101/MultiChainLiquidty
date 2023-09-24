@@ -100,6 +100,12 @@ contract Manager is BaseHook {
         int24 lower,
         int24 upper
     ) public {
+        TransferHelper.safeTransferFrom(
+            token,
+            msg.sender,
+            address(this),
+            tokenAmount
+        );
         uint128 liquidity = 0;
         uint160 sqrtA = TickMath.getSqrtRatioAtTick(lower);
         uint160 sqrtB = TickMath.getSqrtRatioAtTick(upper);
@@ -183,12 +189,13 @@ contract Manager is BaseHook {
 
     //zeroForOne - true - 4295128740
     //zeroForOne - false - 1461446703485210103287273052203988822378723970342
-    function swap(
-        address token,
-        bool toProxy,
-        uint256 tokenAmount,
-        address endUser
-    ) public {
+    function swap(address token, bool toProxy, uint256 tokenAmount) public {
+        TransferHelper.safeTransferFrom(
+            token,
+            msg.sender,
+            address(this),
+            tokenAmount
+        );
         //uniswapInteract
         bool zeroForOne;
         if (token < proxyAddy) {
@@ -221,14 +228,14 @@ contract Manager is BaseHook {
         if (balBeforeToken < IERC20(token).balanceOf(address(this))) {
             TransferHelper.safeTransfer(
                 token,
-                endUser,
+                msg.sender,
                 IERC20(token).balanceOf(address(this)) - balBeforeToken
             );
         }
         if (balBeforeProxy < IERC20(proxyAddy).balanceOf(address(this))) {
             TransferHelper.safeTransfer(
                 proxyAddy,
-                endUser,
+                msg.sender,
                 IERC20(proxyAddy).balanceOf(address(this)) - balBeforeProxy
             );
         }
@@ -240,7 +247,13 @@ contract Manager is BaseHook {
         uint32 domainGoal,
         address endingAsset,
         address endingAddress
-    ) public {
+    ) public payable {
+        TransferHelper.safeTransferFrom(
+            token,
+            msg.sender,
+            address(this),
+            tokenAmount
+        );
         bool zeroForOne;
         bool toProxy = true;
         if (token < proxyAddy) {
@@ -277,7 +290,7 @@ contract Manager is BaseHook {
                 proxyAmount = uint256(-t0);
             }
         }
-
+        //proxyToken.burn(proxyAmount);
         bytes32 _messageId = mailBox.dispatch(
             domainGoal,
             addressToBytes32(domainToAddress[domainGoal]),
@@ -288,11 +301,11 @@ contract Manager is BaseHook {
             )
         );
 
-        // Pay from the contract's balance
-        igp.payForGas{value: 2000000000000000}(
+        //Pay from the contract's balance
+        igp.payForGas{value: msg.value}(
             _messageId, // The ID of the message that was just dispatched
             domainGoal, // The destination domain of the message
-            100000,
+            200000,
             address(this) // refunds are returned to this contract
         );
     }
@@ -306,6 +319,7 @@ contract Manager is BaseHook {
     ) external {
         count++;
         //Decompose the data
+        bool toProxy = false;
         (bytes memory data, uint8 action, address user) = abi.decode(
             _body,
             (bytes, uint8, address)
@@ -316,8 +330,52 @@ contract Manager is BaseHook {
                 address desiredAsset,
                 address endingAddress
             ) = abi.decode(data, (uint256, address, address));
+            if (action == 0) {
+                //address token, bool toProxy, uint256 tokenAmount
+                proxyToken.mint(_proxyAmount);
+                uint256 balBefore = IERC20(desiredAsset).balanceOf(
+                    address(this)
+                );
+                //         uint256 balBeforeToken = IERC20(desiredAsset).balanceOf(
+                //             address(this)
+                //         );
+                //uniswapInteract
+                bool zeroForOne;
+                if (desiredAsset < proxyAddy) {
+                    //token is 0
+                    zeroForOne = false;
+                } else {
+                    zeroForOne = true;
+                }
+                TransferHelper.safeTransfer(
+                    proxyAddy,
+                    address(uniswapInteract),
+                    _proxyAmount
+                );
 
-            swap(desiredAsset, false, _proxyAmount, endingAddress);
+                uniswapInteract.swap(
+                    tokenToKey[desiredAsset],
+                    IPoolManager.SwapParams(
+                        zeroForOne,
+                        int256(_proxyAmount),
+                        zeroForOne
+                            ? 4295128740
+                            : 1461446703485210103287273052203988822378723970341
+                    ),
+                    block.timestamp + 10000000
+                );
+
+                uint256 balAfter = IERC20(desiredAsset).balanceOf(
+                    address(this)
+                );
+                if (balAfter > balBefore) {
+                    TransferHelper.safeTransfer(
+                        desiredAsset,
+                        endingAddress,
+                        balAfter - balBefore
+                    );
+                }
+            }
         }
         if (action == 1) {
             (uint256 boostPerSwap, uint256 totalAmount) = abi.decode(
@@ -328,6 +386,35 @@ contract Manager is BaseHook {
             boostPerSwapDomain[domain] += boostPerSwap;
         }
     }
+
+    // function handle(
+    //     uint256 _proxyAmount,
+    //     address desiredAsset,
+    //     address endingAddress,
+    //     uint8 action
+    // ) external {
+    //     count++;
+    //     //Decompose the data
+
+    //     if (action == 0) {
+    //         //address token, bool toProxy, uint256 tokenAmount
+    //         proxyToken.mint(_proxyAmount);
+    //         uint256 balBefore = IERC20(desiredAsset).balanceOf(address(this));
+    //         //         uint256 balBeforeToken = IERC20(desiredAsset).balanceOf(
+    //         //             address(this)
+    //         //         );
+    //         swap(desiredAsset, false, _proxyAmount);
+
+    //         uint256 balAfter = IERC20(desiredAsset).balanceOf(address(this));
+    //         if (balAfter > balBefore) {
+    //             TransferHelper.safeTransfer(
+    //                 desiredAsset,
+    //                 endingAddress,
+    //                 balAfter - balBefore
+    //             );
+    //         }
+    //     }
+    // }
 
     function addressToBytes32(address _addr) internal pure returns (bytes32) {
         return bytes32(uint256(uint160(_addr)));
@@ -535,9 +622,9 @@ contract Manager is BaseHook {
         uint160 sqrtPriceX96,
         bytes calldata hookData
     ) external override returns (bytes4) {
-        // counterBeforeInit++;
-        // require(sender == address(this));
-        // //require(sqrtPriceX96 == getT )
+        counterBeforeInit++;
+        require(sender == address(this));
+        //require(sqrtPriceX96 == )
 
         return this.beforeInitialize.selector;
     }

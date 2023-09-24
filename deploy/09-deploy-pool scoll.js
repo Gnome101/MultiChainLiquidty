@@ -19,7 +19,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   const scrollPoolManagerAddress = "0xA449635FaAA6b5a45a568fCe217Bb7921c992285";
   const gnosisPoolManagerAddress = "0x57C1A6F0acF8c55534678D0Feac25Eef9B66E238";
 
-  args = [gnosisPoolManagerAddress];
+  args = [scrollPoolManagerAddress];
   const Router = await deploy("UniswapInteract", {
     from: deployer,
     args: args,
@@ -27,14 +27,14 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     blockConfirmations: 2,
   });
   console.log("Chain", chainId);
-  // if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
-  //   log("Verifying...");
-  //   await verify(
-  //     Router.address,
-  //     args,
-  //     "contracts/UniswapInteract.sol:UniswapInteract"
-  //   );
-  // }
+  if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
+    log("Verifying...");
+    await verify(
+      Router.address,
+      args,
+      "contracts/UniswapInteract.sol:UniswapInteract"
+    );
+  }
   //Scro [MToken.address);
   args = [];
   const HookFactory = await deploy("UniswapHooksFactory", {
@@ -45,13 +45,13 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   });
 
   console.log("Chain", chainId);
-  // if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
-  //   log("Verifying...");
-  //   await verify(
-  //     HookFactory.address,
-  //     args,
-  //     "contracts/Utils/HooksFactory.sol:UniswapHooksFactory"
-  //   );
-  // }
+  if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
+    log("Verifying...");
+    await verify(
+      HookFactory.address,
+      args,
+      "contracts/Utils/HooksFactory.sol:UniswapHooksFactory"
+    );
+  }
 };
-module.exports.tags = ["all", "Need", "Local"];
+module.exports.tags = ["all", "Scroll"];

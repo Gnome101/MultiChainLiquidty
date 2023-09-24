@@ -24,14 +24,14 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
   args = [
     uniswapInteract.target,
-    gnosisPoolManagerAddress,
-    gnosisMailBox,
-    gnosisIGP,
+    scrollPoolManagerAddress,
+    scrollMailBox,
+    scrollIGP,
   ];
-  // if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
-  //   log("Verifying...");
-  //   await verify(hook, args, "contracts/Manager.sol:Manager");
-  // }
+  if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
+    log("Verifying...");
+    await verify(hook, args, "contracts/Manager.sol:Manager");
+  }
   args = [hook];
   const ProxyToken = await deploy("Proxy", {
     from: deployer,
@@ -39,10 +39,10 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     log: true,
     blockConfirmations: 2,
   });
-  // if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
-  //   log("Verifying...");
-  //   await verify(ProxyToken.address, args, "contracts/Proxy.sol:Proxy");
-  // }
+  if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
+    log("Verifying...");
+    await verify(ProxyToken.address, args, "contracts/Proxy.sol:Proxy");
+  }
   await manager.setProxyToken(ProxyToken.address);
 };
-module.exports.tags = ["all", "Need", "Local", "3"];
+module.exports.tags = ["all", "Scroll"];

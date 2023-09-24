@@ -64,7 +64,7 @@ describe("Pool Test ", async function () {
     await EPICDAI.mint();
     await EPICDAI.mint();
     const amount = "100000000000000000000"; //100
-    await EPICDAI.transfer(manager.target, amount);
+    await EPICDAI.approve(manager.target, amount);
     await manager.createPosition(
       EPICDAI.target,
       amount,
@@ -72,46 +72,56 @@ describe("Pool Test ", async function () {
       upperBound
     );
     const amount1 = "10000000000000000000"; //10
-    await EPICDAI.transfer(manager.target, "100000000000000000000");
+    await EPICDAI.approve(manager.target, "10000000000000000000");
 
     await manager.swap(EPICDAI.target, true, amount1);
-
-    await EPICDAI.transfer(manager.target, amount1);
-    await manager.swapToOtherChain(
-      EPICDAI.target,
-      true,
-      amount1,
-      0,
-      HOG.target
-    );
+    console.log("HERE");
+    await EPICDAI.approve(manager.target, amount1);
+    // await manager.swapToOtherChain(
+    //   EPICDAI.target,
+    //   amount1,
+    //   0,
+    //   HOG.target,
+    //   deployer.address
+    // );
     console.log("HERE", (await manager.proxyAmount()).toString());
-    await proxyToken.approve(manager.target, "300000000000000000000");
+    await EPICDAI.approve(manager.target, amount1);
+
     await manager.swap(EPICDAI.target, true, amount1);
     console.log(
       "PRX",
       (await proxyToken.balanceOf(deployer.address)).toString()
     );
-    // await manager.createBoost(
-    //   5,
-    //   "1000000000000000000",
-    //   [EPICDAI.target],
-    //   [100]
-    // );
+    await proxyToken.approve(manager.target, amount1);
+
+    await manager.createBoost(
+      5,
+      "1000000000000000000",
+      [EPICDAI.target],
+      [100]
+    );
     console.log(
       "PRX",
       (await proxyToken.balanceOf(deployer.address)).toString()
     );
     console.log("After boost..");
     stack = "1000000000000000"; //100
-
     await EPICDAI.mint();
-    await EPICDAI.transfer(manager.target, stack);
+    await EPICDAI.mint();
+
+    await EPICDAI.approve(manager.target, "1000000000000000000");
+
     await manager.swap(EPICDAI.target, true, stack);
-    await EPICDAI.transfer(manager.target, stack);
     await manager.swap(EPICDAI.target, true, stack);
     console.log("JKAW");
 
     console.log((await manager.counterBeforeSwap()).toString());
+    await manager.handle(
+      "99694035706488360",
+      EPICDAI.target,
+      deployer.address,
+      0
+    );
 
     await manager.closePosition(EPICDAI.target, lowerBound, upperBound);
   });

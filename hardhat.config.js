@@ -71,6 +71,7 @@ module.exports = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       chainId: 534351,
+      saveDeployments: true,
     },
     sepolia: {
       url: "https://rpc.sepolia.org" || "",
@@ -79,10 +80,11 @@ module.exports = {
       chainId: 11155111,
     },
     gnosis: {
-      url: "https://rpc.gnosis.gateway.fm" || "",
+      url: "https://gnosischain-rpc.gateway.pokt.network" || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       chainId: 100,
+      saveDeployments: true,
     },
     mantle: {
       url: "https://rpc.testnet.mantle.xyz/" || "",
