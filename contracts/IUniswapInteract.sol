@@ -108,13 +108,13 @@ contract UniswapInteract {
         PoolKey calldata poolKey,
         IPoolManager.SwapParams calldata swapParams,
         uint256 deadline
-    ) public payable returns (uint256, uint256) {
+    ) public payable returns (int256, int256) {
         swaps[modSwap] = swapParams;
         bytes memory res = poolManager.lock(
             abi.encode(msg.sender, poolKey, 1, modSwap, deadline)
         );
 
-        return abi.decode(res, (uint256, uint256));
+        return abi.decode(res, (int256, int256));
     }
 
     function lockAcquired(

@@ -47,16 +47,38 @@ describe("Pool Test ", async function () {
     const sqrtPrice = calculateSqrtPriceX96(1, 18, 18);
     console.log(sqrtPrice);
     const hookData = hook;
-    await poolManager.initialize(poolKey, sqrtPrice.toFixed(), "0x");
+    // await poolManager.initialize(poolKey, sqrtPrice.toFixed(), "0x");
     //Modify positon params
+    await manager.initialize(EPICDAI.target, sqrtPrice.toFixed(), "0x");
     const lowerBound = 0 - 60 * 10;
     const upperBound = 0 + 60 * 10;
-    await HOG.mint();
     await EPICDAI.mint();
-    await HOG.mint();
     await EPICDAI.mint();
-    await HOG.mint();
     await EPICDAI.mint();
+    const amount = "100000000000000000000"; //100
+    await EPICDAI.transfer(manager.target, amount);
+    await manager.createPosition(
+      EPICDAI.target,
+      amount,
+      lowerBound,
+      upperBound
+    );
+    const amount1 = "10000000000000000000"; //10
+    await EPICDAI.transfer(manager.target, amount1);
+
+    await manager.swap(EPICDAI.target, true, amount1);
+
+    await EPICDAI.transfer(manager.target, amount1);
+    await manager.swapToOtherChain(
+      EPICDAI.target,
+      true,
+      amount1,
+      0,
+      HOG.target
+    );
+    console.log("HERE", (await manager.proxyAmount()).toString());
+
+    await manager.closePosition(EPICDAI.target, lowerBound, upperBound);
   });
   // it("can initialze my own pool 21", async () => {
   //   //I need key, sqrtPrice, and hookData

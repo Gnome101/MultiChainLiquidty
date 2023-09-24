@@ -5,36 +5,48 @@ import "./Proxy.sol";
 import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolId.sol";
 import {IPoolManager} from "@uniswap/v4-core/contracts/PoolManager.sol";
 import "hardhat/console.sol";
+import {Currency, CurrencyLibrary} from "@uniswap/v4-core/contracts/types/Currency.sol";
+
 import "./Hyperlane/IMailbox.sol";
 import "./Hyperlane/IInterchainGasPayMaster.sol";
 import "@uniswap/v3-core/contracts/libraries/TransferHelper.sol";
 import "./ISM/IEmptyIsm.sol";
 import "./ISM/IMultisigISM.sol";
 import "./IUniswapInteract.sol";
+import "./Hooks/Utils/BaseHook.sol";
 
-contract Manager {
+contract Manager is BaseHook {
+    //Hook Stuff
+    uint32 deployTimestamp;
+    uint256 public counterBeforeSwap;
+    uint256 public counterBeforeInit;
+    uint256 public counterAfterSwap;
+
+    //Uniswap Trade Stuff
     UniswapInteract public immutable uniswapInteract;
-    IPoolManager public immutable poolManager;
+    // IPoolManager public immutable override poolManager;
     Proxy public proxyToken;
     address public proxyAddy;
     //PoolKey public poolKey;
     mapping(address => PoolKey) public tokenToKey;
     mapping(address => bool) public approvedToken;
-    mapping(uint256 => address) public domainToAddress; //Domain to Manager address
+
     uint256 public count;
 
     //Hyperlane Stuff:
+    mapping(uint256 => address) public domainToAddress; //Domain to Manager address
     IMailbox public immutable mailBox;
     IInterchainGasPaymaster public immutable igp;
+    address public ism;
 
     constructor(
         address _uI,
         address _poolManager,
         address _mailBox,
         address _igp
-    ) {
+    ) BaseHook(IPoolManager(_poolManager)) {
         uniswapInteract = UniswapInteract(_uI);
-        poolManager = IPoolManager(_poolManager);
+        // poolManager = IPoolManager(_poolManager);
         mailBox = IMailbox(_mailBox);
         igp = IInterchainGasPaymaster(_igp);
     }
@@ -44,8 +56,40 @@ contract Manager {
         proxyAddy = _proxyToken;
     }
 
+    function setISM(address _newISM) public {
+        ism = _newISM;
+    }
+
     function addDomain(uint256 domain, address managerAddress) public {
         domainToAddress[domain] = managerAddress;
+    }
+
+    function initialize(
+        address otherToken,
+        uint160 sqrtPRice,
+        bytes memory hookData
+    ) public {
+        PoolKey memory myKey;
+
+        if (otherToken < proxyAddy) {
+            myKey = PoolKey(
+                Currency.wrap(otherToken),
+                Currency.wrap(proxyAddy),
+                3000,
+                60,
+                IHooks(0x0000000000000000000000000000000000000000)
+            );
+        } else {
+            myKey = PoolKey(
+                Currency.wrap(proxyAddy),
+                Currency.wrap(otherToken),
+                3000,
+                60,
+                IHooks(0x0000000000000000000000000000000000000000)
+            );
+        }
+        poolManager.initialize(myKey, sqrtPRice, hookData);
+        tokenToKey[otherToken] = myKey;
     }
 
     function createPosition(
@@ -55,7 +99,6 @@ contract Manager {
         int24 upper
     ) public {
         uint128 liquidity = 0;
-
         uint160 sqrtA = TickMath.getSqrtRatioAtTick(lower);
         uint160 sqrtB = TickMath.getSqrtRatioAtTick(upper);
         if (token < proxyAddy) {
@@ -75,6 +118,16 @@ contract Manager {
         //uniswapInteract
         uint256 bigAmount = 1000000000000000000000000000;
         proxyToken.mint(bigAmount);
+        TransferHelper.safeTransfer(
+            proxyAddy,
+            address(uniswapInteract),
+            bigAmount
+        );
+        TransferHelper.safeTransfer(
+            (token),
+            address(uniswapInteract),
+            tokenAmount
+        );
         (uint256 t0Amount, uint256 t1Amount) = uniswapInteract.addLiquidity(
             tokenToKey[token],
             IPoolManager.ModifyPositionParams(lower, upper, int128(liquidity)),
@@ -109,7 +162,7 @@ contract Manager {
             proxyToken.burn(uint128(-t1Amount));
         } else {
             TransferHelper.safeTransfer(
-                address(Currency.unwrap(tokenToKey[token].currency0)),
+                address(Currency.unwrap(tokenToKey[token].currency1)),
                 msg.sender,
                 uint128(-t1Amount)
             );
@@ -119,7 +172,7 @@ contract Manager {
 
     //zeroForOne - true - 4295128740
     //zeroForOne - false - 1461446703485210103287273052203988822378723970342
-    function swap(address token, bool toProxy, int256 tokenAmount) public {
+    function swap(address token, bool toProxy, uint256 tokenAmount) public {
         //uniswapInteract
         bool zeroForOne;
         if (token < proxyAddy) {
@@ -130,14 +183,19 @@ contract Manager {
             zeroForOne = false;
             zeroForOne == toProxy ? false : true;
         }
+        TransferHelper.safeTransfer(
+            token,
+            address(uniswapInteract),
+            tokenAmount
+        );
         uniswapInteract.swap(
             tokenToKey[token],
             IPoolManager.SwapParams(
                 zeroForOne,
-                tokenAmount,
+                int256(tokenAmount),
                 zeroForOne
                     ? 4295128740
-                    : 1461446703485210103287273052203988822378723970342
+                    : 1461446703485210103287273052203988822378723970341
             ),
             block.timestamp + 10000000
         );
@@ -146,7 +204,7 @@ contract Manager {
     function swapToOtherChain(
         address token,
         bool toProxy,
-        int256 tokenAmount,
+        uint256 tokenAmount,
         uint32 domainGoal,
         address endingAsset
     ) public {
@@ -160,25 +218,30 @@ contract Manager {
             zeroForOne = false;
             zeroForOne == toProxy ? false : true;
         }
-        (uint256 t0, uint256 t1) = uniswapInteract.swap(
+        TransferHelper.safeTransfer(
+            token,
+            address(uniswapInteract),
+            tokenAmount
+        );
+        (int256 t0, int256 t1) = uniswapInteract.swap(
             tokenToKey[token],
             IPoolManager.SwapParams(
                 zeroForOne,
-                tokenAmount,
+                int256(tokenAmount),
                 zeroForOne
                     ? 4295128740
-                    : 1461446703485210103287273052203988822378723970342
+                    : 1461446703485210103287273052203988822378723970341
             ),
             block.timestamp + 10000000
         );
-
+        console.log(uint256(-t0), uint256(t1));
         //Now transfer the amount of proxy tokens that they just earend
         if (toProxy) {
             //token is 0
             if (zeroForOne) {
-                proxyAmount = t1;
+                proxyAmount = uint256(-t1);
             } else {
-                proxyAmount = t0;
+                proxyAmount = uint256(-t0);
             }
         }
     }
@@ -215,8 +278,87 @@ contract Manager {
         );
     }
 
-    function interchainSecurityModule() external pure returns (address) {
-        return 0xB45E9Dad573Ac59f61b05d06B8cc59728B5b9E6F;
+    function interchainSecurityModule() external view returns (address) {
+        return ism;
+    }
+
+    function getFee(
+        address,
+        PoolKey calldata,
+        IPoolManager.SwapParams calldata,
+        bytes calldata
+    ) external view returns (uint24) {
+        uint24 startingFee = 3000;
+        uint32 lapsed = _blockTimestamp() - deployTimestamp;
+        return startingFee + (uint24(lapsed) * 100) / 60; // 100 bps a minute
+    }
+
+    struct boostInfo {
+        uint256 boostAvailable;
+        uint256 boostID;
+        uint256 boostEnd;
+        uint256 boostPerSwap;
+        address owner;
+    }
+        uint256 boostID;
+        mapping(uint256=>boostInfo)
+    function createBoost(
+        uint256 boostAmount,
+        uint32 boostDomain,
+        uint256 boostPeriod,
+        uint256 boostPerSwap
+    ) public {
+
+    }
+
+    function beforeSwap(
+        address sender,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata params,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        counterBeforeSwap++;
+        return this.beforeSwap.selector;
+    }
+
+    function afterSwap(
+        address sender,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata params,
+        BalanceDelta delta,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        counterAfterSwap++;
+        return this.beforeSwap.selector;
+    }
+
+    function beforeInitialize(
+        address sender,
+        PoolKey calldata key,
+        uint160 sqrtPriceX96,
+        bytes calldata hookData
+    ) external override returns (bytes4) {
+        counterBeforeInit++;
+        return this.beforeSwap.selector;
+    }
+
+    /// @dev For mocking
+    function _blockTimestamp() internal view virtual returns (uint32) {
+        return uint32(block.timestamp);
+    }
+
+    function getHooksCalls() public pure override returns (Hooks.Calls memory) {
+        return
+            Hooks.Calls({
+                beforeInitialize: true,
+                afterInitialize: false,
+                beforeModifyPosition: false,
+                afterModifyPosition: false,
+                beforeSwap: true,
+                afterSwap: true,
+                beforeDonate: false,
+                afterDonate: false
+            });
     }
 
     receive() external payable {}
