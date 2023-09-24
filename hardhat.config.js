@@ -64,23 +64,37 @@ module.exports = {
       //   accounts: {
       //     mnemonic: MNEMONIC,
       //   },
-      saveDeployments: true,
       chainId: 421613,
     },
     scrollSepolia: {
       url: "https://sepolia-rpc.scroll.io" || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      chainId: 534351,
+    },
+    sepolia: {
+      url: "https://rpc.sepolia.org" || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      chainId: 11155111,
     },
     gnosis: {
       url: "https://rpc.gnosis.gateway.fm" || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      chainId: 100,
     },
     mantle: {
       url: "https://rpc.testnet.mantle.xyz/" || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      chainId: 5001,
+    },
+    base_goerli: {
+      url: "https://goerli.base.org" || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      chainId: 84531,
     },
   },
   etherscan: {
@@ -89,16 +103,34 @@ module.exports = {
       mainnet: ETHERSCAN_API_KEY,
       arbitrumGoerli: ARBSCAN_API_KEY,
       gnosis: GNOSIS_API_KEY,
+      sepolia: ETHERSCAN_API_KEY,
       scrollSepolia: SCROLL_API_KEY,
       mantle: "abc",
+      base_goerli: "abc",
     },
     customChains: [
       {
-        network: "mantle",
-        chainId: 5001,
+        network: "sepolia",
+        chainId: 11155111,
         urls: {
-          apiURL: "https://explorer.testnet.mantle.xyz/api",
-          browserURL: "https://explorer.testnet.mantle.xyz/",
+          apiURL: "https://api-sepolia.etherscan.io/api",
+          browserURL: "https://sepolia.etherscan.io/",
+        },
+      },
+      {
+        network: "scrollSepolia",
+        chainId: 534351,
+        urls: {
+          apiURL: "https://api-sepolia.scrollscan.dev/api",
+          browserURL: "https://sepolia.scrollscan.dev/",
+        },
+      },
+      {
+        network: "base_goerli",
+        chainId: 84531,
+        urls: {
+          apiURL: "https://api-goerli.basescan.org/api",
+          browserURL: "https://goerli.basescan.org",
         },
       },
     ],
@@ -127,7 +159,7 @@ module.exports = {
           evmVersion: "istanbul",
           optimizer: {
             enabled: true,
-            runs: 10000,
+            runs: 1,
           },
         },
       },
