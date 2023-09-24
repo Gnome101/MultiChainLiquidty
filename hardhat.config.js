@@ -80,7 +80,9 @@ module.exports = {
       chainId: 11155111,
     },
     gnosis: {
-      url: "https://gnosischain-rpc.gateway.pokt.network" || "",
+      url:
+        "https://rough-hardworking-frog.xdai.discover.quiknode.pro/fc66e121684f59fb38661145037482a50a933a53/" ||
+        "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       chainId: 100,

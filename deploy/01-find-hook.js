@@ -20,7 +20,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   const gnosisIGP = "0x34DBf5d9946C50a2B06d1e6A5755437352a3e6BB";
   let salt;
   let finalAddress;
-  for (let i = 1150; i < 3000; i++) {
+  for (let i = 1300; i < 3000; i++) {
     salt = ethers.toBeHex(i);
     //console.log(salt);
     salt = ethers.zeroPadValue(salt, 32);
@@ -52,6 +52,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     // console.log(_address.substring(0, 4), ethers.toBeHex(_prefix).toString());
     return _address.substring(0, 4) == ethers.toBeHex(_prefix).toString();
   }
+  console.log("Pow");
   await hookFactory.deploy(
     uniswapInteract.target,
     gnosisPoolManagerAddress,
