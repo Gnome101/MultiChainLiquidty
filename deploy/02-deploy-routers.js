@@ -9,6 +9,8 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   //First I need to find hook address that works
   const owner = deployer;
   const poolManager = await ethers.getContract("PoolManager");
+  const uniswapInteract = await ethers.getContract("UniswapInteract");
+
   const hookFactory = await ethers.getContract("UniswapHooksFactory");
 
   let salt;
@@ -48,4 +50,4 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     await verify(Lock.address, args);
   }
 };
-module.exports.tags = ["all", "Pool"];
+module.exports.tags = ["all", "Pool", "Local"];

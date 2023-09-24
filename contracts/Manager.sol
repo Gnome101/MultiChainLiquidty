@@ -9,7 +9,7 @@ import {Currency, CurrencyLibrary} from "@uniswap/v4-core/contracts/types/Curren
 
 import "./Hyperlane/IMailbox.sol";
 import "./Hyperlane/IInterchainGasPayMaster.sol";
-import "@uniswap/v3-core/contracts/libraries/TransferHelper.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./ISM/IEmptyIsm.sol";
 import "./ISM/IMultisigISM.sol";
 import "./IUniswapInteract.sol";
@@ -29,6 +29,7 @@ contract Manager is BaseHook {
     address public proxyAddy;
     //PoolKey public poolKey;
     mapping(address => PoolKey) public tokenToKey;
+
     mapping(address => bool) public approvedToken;
 
     uint256 public count;
@@ -294,22 +295,48 @@ contract Manager is BaseHook {
     }
 
     struct boostInfo {
-        uint256 boostAvailable;
+        uint256 swapCount;
         uint256 boostID;
-        uint256 boostEnd;
         uint256 boostPerSwap;
         address owner;
     }
-        uint256 boostID;
-        mapping(uint256=>boostInfo)
-    function createBoost(
-        uint256 boostAmount,
-        uint32 boostDomain,
-        uint256 boostPeriod,
-        uint256 boostPerSwap
-    ) public {
+    uint256 boostID;
+    mapping(uint256 => boostInfo) public idToInfo;
+    mapping(uint32 => uint256) public totalBoostPerSwapDomain;
+    mapping(address => uint256) public totalBoostPerSwapToken;
+    mapping(uint32 => uint256) public boostPerSwapDomain;
+    mapping(address => uint256) public boostPerSwapToken;
 
+    function createBoost(
+        uint256 swapCount,
+        uint256 boostPerSwap,
+        address[] memory approvedTokens,
+        uint32[] memory approvedDomains
+    ) public {
+        TransferHelper.safeTransferFrom(
+            proxyAddy,
+            msg.sender,
+            address(this),
+            swapCount * boostPerSwap
+        );
+
+        idToInfo[boostID] = boostInfo(
+            swapCount,
+            boostID,
+            boostPerSwap,
+            msg.sender
+        );
+        for (uint i = 0; i < approvedTokens.length; i++) {
+            boostPerSwapToken[approvedTokens[i]] += boostPerSwap;
+            boostPerSwapToken[approvedTokens[i]] += boostPerSwap * swapCount;
+        }
+        // for (uint i = 0; i < approvedDomains.length; i++) { Needs to be multichain
+        //     boostPerSwapDomain[approvedDomains[i]] += boostPerSwap;
+        //     boostPerSwapDomain[approvedDomains[i]] += boostPerSwap * swapCount;
+        // }
     }
+
+    uint32 domain = 0;
 
     function beforeSwap(
         address sender,
@@ -318,6 +345,28 @@ contract Manager is BaseHook {
         bytes calldata hookData
     ) external override returns (bytes4) {
         counterBeforeSwap++;
+        address token = Currency.unwrap(key.currency0) == proxyAddy
+            ? Currency.unwrap(key.currency1)
+            : Currency.unwrap(key.currency0);
+        uint256 boost = boostPerSwapToken[token] + boostPerSwapDomain[domain];
+
+        if (boost > 0) {
+            if (token < proxyAddy) {
+                uniswapInteract.donate(
+                    tokenToKey[token],
+                    0,
+                    boost,
+                    block.timestamp + 100000000
+                );
+            } else {
+                uniswapInteract.donate(
+                    tokenToKey[token],
+                    boost,
+                    0,
+                    block.timestamp + 10000000
+                );
+            }
+        }
         return this.beforeSwap.selector;
     }
 
@@ -329,8 +378,32 @@ contract Manager is BaseHook {
         bytes calldata hookData
     ) external override returns (bytes4) {
         counterAfterSwap++;
+        (uint32 domainGoal, address targetAddy, uint256 proxyAmount) = abi
+            .decode(hookData, (uint32, address, uint256));
+        uint256 gasAmount = 100000;
+        bytes memory data = abi.encode(proxyAmount);
+        bytes32 _messageId = mailBox.dispatch(
+            domainGoal,
+            addressToBytes32(targetAddy),
+            abi.encode(data, sender)
+            //abi.encode(message)
+        );
+
+        // Pay from the contract's balance
+        igp.payForGas{value: 2000000000000000}(
+            _messageId, // The ID of the message that was just dispatched
+            domain, // The destination domain of the message
+            gasAmount,
+            address(this) // refunds are returned to this contract
+        );
+
+        //I could execute this after a swap, and it would check the direction
+
         return this.beforeSwap.selector;
     }
+
+    //function getTokenPrice() view returns () {}
+    //Fancy way to get tokenPriec
 
     function beforeInitialize(
         address sender,
@@ -339,6 +412,9 @@ contract Manager is BaseHook {
         bytes calldata hookData
     ) external override returns (bytes4) {
         counterBeforeInit++;
+        require(sender == address(this));
+        //require(sqrtPriceX96 == getT )
+
         return this.beforeSwap.selector;
     }
 

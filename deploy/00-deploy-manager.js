@@ -47,17 +47,17 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   });
   const manager = await ethers.getContract("Manager");
   await manager.setProxyToken(ProxyToken.address);
-  // const HookFactory = await deploy("UniswapHooksFactory", {
-  //   from: deployer,
-  //   args: args,
-  //   log: true,
-  //   blockConfirmations: 2,
-  // });
+  const HookFactory = await deploy("UniswapHooksFactory", {
+    from: deployer,
+    args: args,
+    log: true,
+    blockConfirmations: 2,
+  });
 
-  // console.log("Chain", chainId);
-  // if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
-  //   log("Verifying...");
-  //   await verify(Lock.address, args);
-  // }
+  console.log("Chain", chainId);
+  if (chainId != 31337 && process.env.ETHERSCAN_API_KEY) {
+    log("Verifying...");
+    await verify(Lock.address, args);
+  }
 };
 module.exports.tags = ["all", "Pool", "Local"];
